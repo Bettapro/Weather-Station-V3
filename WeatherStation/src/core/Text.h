@@ -1,0 +1,43 @@
+/**
+ * Solar Tracer Blynk V3 [https://github.com/Bettapro/Solar-Tracer-Blynk-V3]
+ * Copyright (c) 2021 Alberto Bettin
+ *
+ * Based on the work of @jaminNZx and @tekk.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+#pragma once
+
+#ifndef TEXT_H
+#define TEXT_H
+
+class Text
+{
+public:
+    static constexpr const char *ok = "OK";
+    static constexpr const char *ko = "KO";
+    static constexpr const char *dot = ".";
+    static constexpr const char *password = "Password";
+    static constexpr const char *connecting = "Connecting ";
+    static constexpr const char *setupWithName = "++ SETTING UP %s";
+    static constexpr const char *errorWithCode = "Error[%i]";
+    static constexpr const char *port = "Port";
+    static constexpr const char *server = "Server";
+    static constexpr const char *syncErrorWithCountAndType = "WARNING %i %s var. are not synced";
+    static constexpr const char *syncErrorWithVariable = "WARNING \"%s\" is not synced";
+};
+
+#endif

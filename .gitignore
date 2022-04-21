@@ -1,0 +1,9 @@
+# Platformio
+.pio*
+
+# Visual Studio Code.pio
+.vscode
+
+#build folder
+binFiles
+script
