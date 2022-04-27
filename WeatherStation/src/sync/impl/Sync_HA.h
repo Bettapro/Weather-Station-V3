@@ -5,18 +5,22 @@
 #include "../Sync.h"
 #include <ArduinoHA.h>
 
-
 class Sync_HA : public Sync
 {
 public:
-    Sync_HA(const char *server, const char *user, const char *password, const char *deviceId, const char * deviceName)
+    Sync_HA(const char *server, const char *user, const char *password, const char *deviceId, const char *deviceName)
     {
         this->server = strdup(server);
         this->user = strdup(user);
         this->password = strdup(password);
         this->deviceId = strdup(deviceId);
         this->deviceName = strdup(deviceName);
+
+        this->client = nullptr;
+        this->device = nullptr;
+        this->mqtt = nullptr;
     };
+
     void setup()
     {
         this->client = new WiFiClient();
@@ -26,7 +30,7 @@ public:
         this->device->setName(this->deviceName);
         this->device->setSoftwareVersion(PROJECT_VERSION);
         this->device->setModel(PROJECT_NAME);
-         this->device->setManufacturer(PROJECT_NAME);
+        this->device->setManufacturer(PROJECT_AUTHOR);
     };
 
     bool flush()
@@ -66,6 +70,18 @@ public:
 
         this->mqtt->loop();
 
+        int attemptCount = 0;
+        while (!this->mqtt->isConnected())
+        {
+            if (attemptCount > 10)
+            {
+                return false;
+            }
+            delay(100);
+            this->mqtt->loop();
+            attemptCount++;
+        }
+
         pressureSensor.setAvailability(this->pressure != nullptr);
         if (this->pressure != nullptr)
         {
@@ -103,21 +119,42 @@ public:
             windSensor.setValue((int)round(*this->windSpeed));
         }
 
-        for (uint16_t index = 0; index < 15; index++)
+        for (uint8_t index = 0; index < 5; index++)
         {
             this->mqtt->loop();
-            delay(100);
+            delay(250);
         }
 
         return true;
     };
+
+    void stop()
+    {
+        if (this->mqtt != nullptr)
+        {
+            this->mqtt->disconnect();
+            delete this->mqtt;
+            this->mqtt = nullptr;
+        }
+        if (this->device != nullptr)
+        {
+            delete this->device;
+            this->device = nullptr;
+        }
+        if (this->client != nullptr)
+        {
+            this->client->flush();
+            delete this->client;
+            this->client = nullptr;
+        }
+    }
 
 private:
     char *server;
     char *user;
     char *password;
     char *deviceId;
-    char * deviceName;
+    char *deviceName;
     //
     WiFiClient *client;
     HADevice *device;

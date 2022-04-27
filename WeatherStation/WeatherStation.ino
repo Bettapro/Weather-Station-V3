@@ -77,7 +77,6 @@ void setup() // Setup function - only function that is run in deep sleep mode
     ESP.restart();
   }
 
-  esp_sleep_enable_timer_wakeup(envData->updateInterval * uS_TO_S_FACTOR); // Initialise deep sleep mode parameters
 
   std::vector<Sensor *> sensors;
 
@@ -203,6 +202,7 @@ void setup() // Setup function - only function that is run in deep sleep mode
     {
       Serial.println("Sync ERROR with ThingSpeak");
     }
+    syncTS.stop();
 #endif
 #ifdef USE_MQTT_HOME_ASSISTANT
     syncHa.setup();
@@ -210,7 +210,10 @@ void setup() // Setup function - only function that is run in deep sleep mode
     {
       Serial.println("Sync ERROR with HA");
     }
+    syncHa.stop();
 #endif
+    // sync completed -> disconnect for wifi
+    WiFi.disconnect();
   }
   else
   {
@@ -218,11 +221,13 @@ void setup() // Setup function - only function that is run in deep sleep mode
     Serial.println("WiFi connection failed");
   }
 
-  drd->loop();
+  drd->stop();
 
   Serial.println("Going to sleep now");
   Serial.flush();
-  esp_deep_sleep_start(); // Enter sleep mode
+
+  
+  ESP.deepSleep(envData->updateInterval * uS_TO_S_FACTOR);  // Enter sleep mode
 }
 
 void loop() // Loop function - unused

@@ -5,6 +5,7 @@
 #define INCLUDE_ALL_CORE_H
 
 #define PROJECT_NAME "Weather-Station-V3"
+#define PROJECT_AUTHOR "Bettapro"
 #define PROJECT_VERSION "v3.0.0"
 #define PROJECT_SUBVERSION 0
 

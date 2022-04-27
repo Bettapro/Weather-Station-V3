@@ -49,6 +49,8 @@ public:
         return x == 200;
     };
 
+    void stop(){};
+
 private:
     char *apiKey;
     unsigned long channel;
