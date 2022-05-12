@@ -5,7 +5,7 @@
 #include "../SensorAvgRead.h"
 
 #define BATT_SAMPLE_COUNT 2
-#define BATT_SAMPLE_TIME 100
+#define BATT_SAMPLE_TIME 200
 
 #include <Arduino.h>
 

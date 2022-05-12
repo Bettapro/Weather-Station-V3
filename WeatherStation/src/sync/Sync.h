@@ -12,7 +12,7 @@ public:
     {
         memcpy(this->getOrAlloc(type), &value, sizeof(float));
     }
-    virtual bool flush() = 0;
+    virtual uint8_t flush() = 0;
     virtual void stop() = 0;
 
 protected:

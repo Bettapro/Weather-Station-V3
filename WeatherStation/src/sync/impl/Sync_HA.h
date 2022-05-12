@@ -33,7 +33,7 @@ public:
         this->device->setManufacturer(PROJECT_AUTHOR);
     };
 
-    bool flush()
+    uint8_t flush()
     {
         HASensor pressureSensor("pressure");
         pressureSensor.setDeviceClass("pressure");
@@ -65,7 +65,7 @@ public:
 
         if (!this->mqtt->begin(this->server, this->user, this->password))
         {
-            return false;
+            return 1;
         }
 
         this->mqtt->loop();
@@ -75,7 +75,7 @@ public:
         {
             if (attemptCount > 10)
             {
-                return false;
+                return 2;
             }
             delay(100);
             this->mqtt->loop();
@@ -124,8 +124,7 @@ public:
             this->mqtt->loop();
             delay(250);
         }
-
-        return true;
+        return 0;
     };
 
     void stop()

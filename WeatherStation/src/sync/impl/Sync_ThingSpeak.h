@@ -19,7 +19,7 @@ public:
         ThingSpeak.begin(*this->client);
     };
 
-    bool flush()
+    uint8_t flush()
     {
         if (this->light != nullptr)
         {
@@ -46,7 +46,7 @@ public:
             ThingSpeak.setField(6, (float)(round(*this->batterySoc * RAW_MEASURE_PRECISION) / RAW_MEASURE_PRECISION));
         }
         int x = ThingSpeak.writeFields(this->channel, this->apiKey);
-        return x == 200;
+        return x == 200 ? 0 : 2;
     };
 
     void stop(){};

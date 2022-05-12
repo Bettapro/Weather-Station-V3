@@ -61,7 +61,7 @@ public:
             wifiManager.setParamsPage(true);
             wifiManager.setConfigPortalBlocking(true);
             wifiManager.setDebugOutput(false);
-            wifiManager.setTimeout(30);
+            wifiManager.setTimeout(90);
 
             char updateInterval[5];
             WiFiManagerParameter customUpdateInterval(CONFIG_PERSISTENCE_STATION_UPDATE_INTERVAL_S, "Update every [s]", Util::intToChar(Environment::getData()->updateInterval, updateInterval), 4, "type=\"number\" min=\"0\"  min=\"9999\"");

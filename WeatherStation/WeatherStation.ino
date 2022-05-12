@@ -29,12 +29,8 @@
 
 DoubleResetDetector *drd;
 
-void setup() // Setup function - only function that is run in deep sleep mode
+bool attemptWifiConnection(const environrmentData *envData, unsigned long timeoutLength = 10000)
 {
-  Serial.begin(SERIAL_DEBUG_BAUDRATE);
-  Environment::loadEnvData();
-  const environrmentData *envData = Environment::getData();
-
   IPAddress ip;
   IPAddress gateway;
   IPAddress subnet;
@@ -63,6 +59,22 @@ void setup() // Setup function - only function that is run in deep sleep mode
     dns1.fromString(envData->wifiDns2);
   }
 
+  if (strlen(Environment::getData()->wifiSSID) > 0)
+  {
+    WiFi.enableSTA(true);
+    WiFi.config(ip, gateway, subnet, dns1, dns2);
+    WiFi.begin(Environment::getData()->wifiSSID, Environment::getData()->wifiPassword);
+    WiFi.waitForConnectResult(timeoutLength);
+  }
+  return WiFi.status() == WL_CONNECTED;
+}
+
+void setup() // Setup function - only function that is run in deep sleep mode
+{
+  Serial.begin(SERIAL_DEBUG_BAUDRATE);
+  Environment::loadEnvData();
+  const environrmentData *envData = Environment::getData();
+
   drd = new DoubleResetDetector(2, 0);
 
   if (drd->detectDoubleReset())
@@ -70,13 +82,11 @@ void setup() // Setup function - only function that is run in deep sleep mode
     drd->stop();
     Serial.println("Double Reset Detected");
 
-    WiFi.config(ip, gateway, subnet, dns1, dns2);
-    WiFi.begin(Environment::getData()->wifiSSID, Environment::getData()->wifiPassword);
+    attemptWifiConnection(envData);
 
     WifiManagerWB::startWifiConfigurationAP(true);
     ESP.restart();
   }
-
 
   std::vector<Sensor *> sensors;
 
@@ -182,52 +192,50 @@ void setup() // Setup function - only function that is run in deep sleep mode
     sensor->stop();
   }
 
-  WiFi.config(ip, gateway, subnet, dns1, dns2);
-  WiFi.begin(Environment::getData()->wifiSSID, Environment::getData()->wifiPassword);
+  Wire.end();
 
-  int timeout = 0;
-  while (WiFi.status() != WL_CONNECTED && timeout < 20)
+  if (attemptWifiConnection(envData, 30000))
   {
-    delay(500);
-    Serial.print(".");
-    timeout++;
-  }
-  if (WiFi.status() == WL_CONNECTED)
-  {
-    Serial.println("");
+    Serial.println();
     Serial.println("WiFi connected");
 #ifdef USE_THINGSPEAK
     syncTS.setup();
-    if (!syncTS.flush())
+    uint8_t syncTSResult = syncTS.flush();
+    if (syncTSResult != 0)
     {
-      Serial.println("Sync ERROR with ThingSpeak");
+      Serial.printf("Sync ERROR with ThingSpeak [%d]", syncHaResult);
+      Serial.println();
     }
     syncTS.stop();
 #endif
 #ifdef USE_MQTT_HOME_ASSISTANT
     syncHa.setup();
-    if (!syncHa.flush())
+    uint8_t syncHaResult = syncHa.flush();
+    if (syncHaResult != 0)
     {
-      Serial.println("Sync ERROR with HA");
+      Serial.printf("Sync ERROR with HA [%d]", syncHaResult);
+      Serial.println();
     }
     syncHa.stop();
 #endif
     // sync completed -> disconnect for wifi
-    WiFi.disconnect();
+    WiFi.disconnect(true, true);
+    delay(200);
   }
   else
   {
-    Serial.println("");
-    Serial.println("WiFi connection failed");
+    Serial.println();
+    Serial.printf("WiFi connection failed [%d]", WiFi.status());
+    Serial.println();
   }
 
   drd->stop();
 
   Serial.println("Going to sleep now");
   Serial.flush();
+  Serial.end();
 
-  
-  ESP.deepSleep(envData->updateInterval * uS_TO_S_FACTOR);  // Enter sleep mode
+  ESP.deepSleep(envData->updateInterval * uS_TO_S_FACTOR); // Enter sleep mode
 }
 
 void loop() // Loop function - unused
