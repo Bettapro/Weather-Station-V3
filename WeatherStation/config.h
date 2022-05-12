@@ -1,8 +1,28 @@
-
+/**
+ * Weather station V3 [https://github.com/Bettapro/Weather-Station-V3]
+ * Copyright (c) 2022 Alberto Bettin
+ *
+ * Based on the work of Michael Klements from "The DIY Life"
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
 
 #pragma once
 
 #define SERIAL_DEBUG_BAUDRATE 115200
+
 
 /*
  * WIFI
@@ -31,35 +51,35 @@
 
 //#define USE_ANALOG_LIGHT_SENSOR
 #ifdef USE_ANALOG_LIGHT_SENSOR
-  #define ANALOG_LIGHT_SENSOR_ADC_PIN 36
+  //#define ANALOG_LIGHT_SENSOR_ADC_PIN 36
 
-  #define ANALOG_LIGHT_SENSOR_POWER_PIN 19
+  //#define ANALOG_LIGHT_SENSOR_POWER_PIN 19
 #endif
 
 #define USE_BH1750
 #ifdef USE_BH1750
   #define BH1750_I2C_ADDRESS 0x23
 
-  #define BH1750_POWER_PIN 19
+  //#define BH1750_POWER_PIN 19
 #endif
 
 #define USE_BME280
 #ifdef USE_BME280
   #define BME280_I2C_ADDRESS 0x76
 
-  #define BME280_POWER_PIN 19
+  //#define BME280_POWER_PIN 19
 #endif
 
 #define USE_DIGITAL_ANEMOMETER
 #ifdef USE_DIGITAL_ANEMOMETER
-  #define DIGITAL_ANEMOMETER_POWER_PIN 18
+  //#define DIGITAL_ANEMOMETER_POWER_PIN 18
 
-  #define DIGITAL_ANEMOMETER_SIGNAL_PIN 23
+  //#define DIGITAL_ANEMOMETER_SIGNAL_PIN 23
 #endif
 
 #define USE_BATTERY_SOC
 #ifdef USE_BATTERY_SOC
-    #define BATTERY_SOC_ADC_PIN 34
+    //#define BATTERY_SOC_ADC_PIN 34
 
     #define BATTERY_SOC_MAX_VOLTAGE 4.2
 

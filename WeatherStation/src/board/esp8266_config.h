@@ -21,23 +21,35 @@
 
 #pragma once
 
-#ifndef UTIL_H
-#define UTIL_H
+#ifdef ESP8266
 
-#include <stdlib.h>
+#if defined USE_ANALOG_LIGHT_SENSOR and ! defined(ANALOG_LIGHT_SENSOR_ADC_PIN)
+    #define ANALOG_LIGHT_SENSOR_ADC_PIN ADC0 
+#endif
 
-class Util
-{
-public:
-    static char *intToChar(int v, char * buf);
-    static char *intToChar(int v)
-    {
-        return intToChar(v, sharedBuffer);
-    }
-    /**
-     * Shared buffer, use it with caution as it will be reused
-     * 
-     */
-    static char* sharedBuffer;
-};
+#if defined USE_ANALOG_LIGHT_SENSOR and ! defined(ANALOG_LIGHT_SENSOR_POWER_PIN)
+    #define ANALOG_LIGHT_SENSOR_POWER_PIN 14
+#endif
+
+#if defined USE_BH1750 and ! defined(BH1750_POWER_PIN)
+    #define BH1750_POWER_PIN 14
+#endif
+
+#if defined USE_BME280 and ! defined(BME280_POWER_PIN)
+    #define BME280_POWER_PIN 14
+#endif
+
+#if defined USE_DIGITAL_ANEMOMETER and ! defined(DIGITAL_ANEMOMETER_POWER_PIN)
+    #define DIGITAL_ANEMOMETER_POWER_PIN 12
+#endif
+
+#if defined USE_DIGITAL_ANEMOMETER and ! defined(DIGITAL_ANEMOMETER_SIGNAL_PIN)
+    #define DIGITAL_ANEMOMETER_SIGNAL_PIN 13
+#endif
+
+#if defined USE_BATTERY_SOC and ! defined(BATTERY_SOC_ADC_PIN)
+    #define BATTERY_SOC_ADC_PIN ADC0
+#endif
+
+
 #endif

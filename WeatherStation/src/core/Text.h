@@ -1,8 +1,8 @@
 /**
- * Solar Tracer Blynk V3 [https://github.com/Bettapro/Solar-Tracer-Blynk-V3]
- * Copyright (c) 2021 Alberto Bettin
+ * Weather station V3 [https://github.com/Bettapro/Weather-Station-V3]
+ * Copyright (c) 2022 Alberto Bettin
  *
- * Based on the work of @jaminNZx and @tekk.
+ * Based on the work of Michael Klements from "The DIY Life"
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
