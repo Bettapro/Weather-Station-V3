@@ -59,14 +59,21 @@ bool attemptWifiConnection(const environrmentData *envData, unsigned long timeou
     dns1.fromString(envData->wifiDns2);
   }
 
+  uint8_t wifiStatus = WL_DISCONNECTED;
   if (strlen(Environment::getData()->wifiSSID) > 0)
   {
     WiFi.enableSTA(true);
     WiFi.config(ip, gateway, subnet, dns1, dns2);
     WiFi.begin(Environment::getData()->wifiSSID, Environment::getData()->wifiPassword);
-    WiFi.waitForConnectResult(timeoutLength);
+    wifiStatus = WiFi.waitForConnectResult(timeoutLength);
+    if (wifiStatus == WL_DISCONNECTED)
+    {
+      WiFi.reconnect();
+      wifiStatus = WiFi.waitForConnectResult(timeoutLength);
+    }
   }
-  return WiFi.status() == WL_CONNECTED;
+
+  return wifiStatus == WL_CONNECTED;
 }
 
 void setup() // Setup function - only function that is run in deep sleep mode
@@ -216,11 +223,15 @@ void setup() // Setup function - only function that is run in deep sleep mode
       Serial.printf("Sync ERROR with HA [%d]", syncHaResult);
       Serial.println();
     }
+    else{
+      Serial.println("Sync OK with HA ");
+    }
     syncHa.stop();
 #endif
     // sync completed -> disconnect for wifi
+    delay(1500);
+    Serial.println("Wifi disconnected");
     WiFi.disconnect(true, true);
-    delay(200);
   }
   else
   {
@@ -230,7 +241,6 @@ void setup() // Setup function - only function that is run in deep sleep mode
   }
 
   drd->stop();
-
   Serial.println("Going to sleep now");
   Serial.flush();
   Serial.end();

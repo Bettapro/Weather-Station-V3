@@ -102,42 +102,39 @@ public:
             this->mqtt->loop();
             attemptCount++;
         }
+        this->client->setNoDelay(true);
+
+        bool syncOk = true;
 
         pressureSensor.setAvailability(this->pressure != nullptr);
-        if (this->pressure != nullptr)
+        if (syncOk && this->pressure != nullptr)
         {
-            pressureSensor.setValue((int)round(*this->pressure));
+            syncOk &= pressureSensor.setValue((int)round(*this->pressure));
         }
 
-        lightSensor.setAvailability(this->light != nullptr);
-        if (this->light != nullptr)
+        if (syncOk && this->light != nullptr)
         {
-            lightSensor.setValue((int)round(*this->light));
+            syncOk &= lightSensor.setValue((int)round(*this->light));
         }
 
-        humidSensor.setAvailability(this->humidity != nullptr);
-        if (this->humidity != nullptr)
+        if (syncOk && this->humidity != nullptr)
         {
-            humidSensor.setValue(round(*this->humidity * RAW_MEASURE_PRECISION) / RAW_MEASURE_PRECISION);
+            syncOk &= humidSensor.setValue(round(*this->humidity * RAW_MEASURE_PRECISION) / RAW_MEASURE_PRECISION);
         }
 
-        batterySensor.setAvailability(this->batterySoc != nullptr);
-
-        if (this->batterySoc != nullptr)
+        if (syncOk && this->batterySoc != nullptr)
         {
-            batterySensor.setValue(round(*this->batterySoc * RAW_MEASURE_PRECISION) / RAW_MEASURE_PRECISION);
+            syncOk &= batterySensor.setValue(round(*this->batterySoc * RAW_MEASURE_PRECISION) / RAW_MEASURE_PRECISION);
         }
 
-        tempSensor.setAvailability(this->temperature != nullptr);
-        if (this->temperature != nullptr)
+        if (syncOk && this->temperature != nullptr)
         {
-            tempSensor.setValue(round(*this->temperature * RAW_MEASURE_PRECISION) / RAW_MEASURE_PRECISION);
+            syncOk &= tempSensor.setValue(round(*this->temperature * RAW_MEASURE_PRECISION) / RAW_MEASURE_PRECISION);
         }
 
-        windSensor.setAvailability(this->windSpeed != nullptr);
-        if (this->windSpeed != nullptr)
+        if (syncOk && this->windSpeed != nullptr)
         {
-            windSensor.setValue((int)round(*this->windSpeed));
+            syncOk &= windSensor.setValue((int)round(*this->windSpeed));
         }
 
         for (uint8_t index = 0; index < 5; index++)
@@ -145,7 +142,7 @@ public:
             this->mqtt->loop();
             delay(250);
         }
-        return 0;
+        return syncOk ? 0 : 10;
     };
 
     void stop()
