@@ -78,6 +78,7 @@ bool attemptWifiConnection(const environrmentData *envData, unsigned long timeou
 
 void setup() // Setup function - only function that is run in deep sleep mode
 {
+  uint8_t sleepMult = 1;
   Serial.begin(SERIAL_DEBUG_BAUDRATE);
   Environment::loadEnvData();
   const environrmentData *envData = Environment::getData();
@@ -161,6 +162,12 @@ void setup() // Setup function - only function that is run in deep sleep mode
         switch (rd)
         {
         case RD_BATTERY_SOC:
+          if(cValue < 40){
+            sleepMult = 3;
+          }
+          else if(cValue < 65){
+            sleepMult = 2;
+          }
           Serial.print("Battery SOC");
           break;
         case RD_HUMIDITY:
@@ -245,7 +252,7 @@ void setup() // Setup function - only function that is run in deep sleep mode
   Serial.flush();
   Serial.end();
 
-  ESP.deepSleep(envData->updateInterval * uS_TO_S_FACTOR); // Enter sleep mode
+  ESP.deepSleep(envData->updateInterval * uS_TO_S_FACTOR * sleepMult); // Enter sleep mode
 }
 
 void loop() // Loop function - unused
