@@ -22,7 +22,7 @@
 #ifndef SENSOR_H
 #define SENSOR_H
 
-#define RAW_MEASURE_PRECISION 10.00
+#define RAW_MEASURE_PRECISION 10.00f
 
 
 typedef enum

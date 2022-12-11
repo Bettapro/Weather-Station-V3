@@ -56,32 +56,31 @@ public:
 
     uint8_t flush()
     {
-        HASensor pressureSensor("pressure");
+        HASensorNumber pressureSensor("pressure");
         pressureSensor.setDeviceClass("pressure");
         pressureSensor.setName("Atmoferic pressure");
         pressureSensor.setUnitOfMeasurement("hPa");
 
-        HASensor lightSensor("light");
-
+        HASensorNumber lightSensor("light");
         lightSensor.setName("Light intensity");
         lightSensor.setUnitOfMeasurement("lx");
         lightSensor.setDeviceClass("illuminance");
 
-        HASensor humidSensor("humidity");
+        HASensorNumber humidSensor("humidity");
         humidSensor.setName("Humidity");
         humidSensor.setDeviceClass("humidity");
         humidSensor.setUnitOfMeasurement("%");
 
-        HASensor batterySensor("battery");
+        HASensorNumber batterySensor("battery");
         batterySensor.setName("Battery SOC");
         batterySensor.setDeviceClass("battery");
         batterySensor.setUnitOfMeasurement("%");
 
-        HASensor tempSensor("temperature");
+        HASensorNumber tempSensor("temperature");
         tempSensor.setName("Temperature");
         tempSensor.setUnitOfMeasurement("°C");
 
-        HASensor windSensor("wind_speed");
+        HASensorNumber windSensor("wind_speed");
         windSensor.setName("Wind speed");
 
         if (!this->mqtt->begin(this->server, this->user, this->password))
