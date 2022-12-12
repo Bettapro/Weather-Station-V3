@@ -25,7 +25,7 @@
 #include "../Sensor.h"
 #include "../SensorAvgRead.h"
 
-#define BATT_SAMPLE_COUNT 2
+#define BATT_SAMPLE_COUNT 1
 #define BATT_SAMPLE_TIME 200
 
 #include <Arduino.h>
@@ -57,9 +57,11 @@ public:
         SensorAvgRead voltageAvg;
         for (uint8_t sampleCount = 0; sampleCount < BATT_SAMPLE_COUNT; sampleCount++)
         {
+            if(sampleCount > 0){
+                delay(BATT_SAMPLE_TIME);
+            }
             float value = analogRead(this->pinVoltage) * vMax / 4095.0;
             voltageAvg.accumulate(value);
-            delay(BATT_SAMPLE_TIME);
         }
         this->soc = (voltageAvg.get(vMin) - vMin) / (vMax - vMin) * 100;
     }

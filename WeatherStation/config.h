@@ -81,7 +81,7 @@
 #ifdef USE_BATTERY_SOC
     //#define BATTERY_SOC_ADC_PIN 34
 
-    #define BATTERY_SOC_MAX_VOLTAGE 4.2
+    #define BATTERY_SOC_MAX_VOLTAGE 4.54
 
     #define BATTERY_SOC_MIN_VOLTAGE 3.3
 #endif

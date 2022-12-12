@@ -162,11 +162,8 @@ void setup() // Setup function - only function that is run in deep sleep mode
         switch (rd)
         {
         case RD_BATTERY_SOC:
-          if(cValue < 40){
-            sleepMult = 3;
-          }
-          else if(cValue < 65){
-            sleepMult = 2;
+          if(cValue < 30){
+            sleepMult = std::floor( (30- cValue) / 3) ;
           }
           Serial.print("Battery SOC");
           break;

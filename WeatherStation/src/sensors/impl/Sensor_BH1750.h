@@ -27,7 +27,7 @@
 
 #include <BH1750.h>
 
-#define SAMPLE_COUNT 5
+#define SAMPLE_COUNT 3
 #define SAMPLE_TIME 100
 
 class Sensor_BH1750 : public Sensor
@@ -59,9 +59,12 @@ public:
         SensorAvgRead lightAvg;
         for (uint8_t sampleCount = 0; sampleCount < SAMPLE_COUNT; sampleCount++)
         {
+            if (sampleCount > 0)
+            {
+                delay(SAMPLE_TIME);
+            }
             lightAvg.accumulate(lightMeter->readLightLevel(), [](float v)
                                 { return v >= 0 && v <= 65535; });
-            delay(SAMPLE_TIME);
         }
         this->lightIntensity = lightAvg.get(-1);
     }

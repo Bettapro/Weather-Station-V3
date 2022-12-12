@@ -27,7 +27,7 @@
 
 #include <Adafruit_BME280.h>
 
-#define SAMPLE_COUNT 5
+#define SAMPLE_COUNT 3
 #define SAMPLE_TIME 100
 
 class Sensor_BME280 : public Sensor
@@ -61,13 +61,16 @@ public:
         SensorAvgRead temperatureAvg;
         for (uint8_t sampleCount = 0; sampleCount < SAMPLE_COUNT; sampleCount++)
         {
+            if(sampleCount > 0){
+                delay(SAMPLE_TIME);
+            }
             temperatureAvg.accumulate(bme->readTemperature(), [](float v)
                                       { return v >= -40 && v <= 85; });
             humidityAvg.accumulate(bme->readHumidity(), [](float v)
                                    { return v >= 0 && v <= 100; });
             pressureAvg.accumulate(bme->readPressure() / 100.0, [](float v)
                                    { return v >= 300 && v <= 1100; });
-            delay(SAMPLE_TIME);
+            
         }
         this->pressure = pressureAvg.get(-1);
         this->humidity = humidityAvg.get(-1);

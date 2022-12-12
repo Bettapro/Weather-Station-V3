@@ -46,7 +46,7 @@ public:
     {
         this->client = new WiFiClient();
         this->device = new HADevice(this->deviceId);
-        this->mqtt = new HAMqtt(*this->client, *this->device);
+        this->mqtt = new HAMqtt(*this->client, *this->device, 7);
         // set device's details (optional)
         this->device->setName(this->deviceName);
         this->device->setSoftwareVersion(PROJECT_VERSION);
@@ -66,7 +66,7 @@ public:
         lightSensor.setUnitOfMeasurement("lx");
         lightSensor.setDeviceClass("illuminance");
 
-        HASensorNumber humidSensor("humidity");
+        HASensorNumber humidSensor("humidity", HABaseDeviceType::PrecisionP1);
         humidSensor.setName("Humidity");
         humidSensor.setDeviceClass("humidity");
         humidSensor.setUnitOfMeasurement("%");
@@ -76,7 +76,7 @@ public:
         batterySensor.setDeviceClass("battery");
         batterySensor.setUnitOfMeasurement("%");
 
-        HASensorNumber tempSensor("temperature");
+        HASensorNumber tempSensor("temperature", HABaseDeviceType::PrecisionP1);
         tempSensor.setName("Temperature");
         tempSensor.setUnitOfMeasurement("°C");
 
@@ -108,35 +108,40 @@ public:
         pressureSensor.setAvailability(this->pressure != nullptr);
         if (syncOk && this->pressure != nullptr)
         {
-            syncOk &= pressureSensor.setValue((int)round(*this->pressure));
+            syncOk &= pressureSensor.setValue(*this->pressure);
         }
 
+        lightSensor.setAvailability(this->light != nullptr);
         if (syncOk && this->light != nullptr)
         {
-            syncOk &= lightSensor.setValue((int)round(*this->light));
+            syncOk &= lightSensor.setValue(*this->light);
         }
 
+        humidSensor.setAvailability(this->humidity != nullptr);
         if (syncOk && this->humidity != nullptr)
         {
-            syncOk &= humidSensor.setValue(round(*this->humidity * RAW_MEASURE_PRECISION) / RAW_MEASURE_PRECISION);
+            syncOk &= humidSensor.setValue(*this->humidity * RAW_MEASURE_PRECISION / RAW_MEASURE_PRECISION);
         }
 
+        batterySensor.setAvailability(this->batterySoc != nullptr);
         if (syncOk && this->batterySoc != nullptr)
         {
-            syncOk &= batterySensor.setValue(round(*this->batterySoc * RAW_MEASURE_PRECISION) / RAW_MEASURE_PRECISION);
+            syncOk &= batterySensor.setValue(*this->batterySoc * RAW_MEASURE_PRECISION / RAW_MEASURE_PRECISION);
         }
 
+        tempSensor.setAvailability(this->temperature != nullptr);
         if (syncOk && this->temperature != nullptr)
         {
-            syncOk &= tempSensor.setValue(round(*this->temperature * RAW_MEASURE_PRECISION) / RAW_MEASURE_PRECISION);
+            syncOk &= tempSensor.setValue(*this->temperature * RAW_MEASURE_PRECISION / RAW_MEASURE_PRECISION);
         }
 
+        windSensor.setAvailability(this->windSpeed != nullptr);
         if (syncOk && this->windSpeed != nullptr)
         {
-            syncOk &= windSensor.setValue((int)round(*this->windSpeed));
+            syncOk &= windSensor.setValue(*this->windSpeed);
         }
 
-        for (uint8_t index = 0; index < 5; index++)
+        for (uint8_t index = 0; index < 4; index++)
         {
             this->mqtt->loop();
             delay(250);
