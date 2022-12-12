@@ -28,6 +28,7 @@
 #define uS_TO_S_FACTOR 1000000ULL // Conversion factor for micro seconds to seconds
 
 DoubleResetDetector *drd;
+std::vector<Sensor *> sensors;
 
 bool attemptWifiConnection(const environrmentData *envData, unsigned long timeoutLength = 10000)
 {
@@ -76,6 +77,38 @@ bool attemptWifiConnection(const environrmentData *envData, unsigned long timeou
   return wifiStatus == WL_CONNECTED;
 }
 
+int8_t getSleepMult(float batterySOC)
+{
+  if (batterySOC < BATTERY_SOC_MIN_THROTTLE_SOC)
+  {
+    return std::floor((BATTERY_SOC_MIN_THROTTLE_SOC - batterySOC) / 3) * batterySOC < BATTERY_SOC_MIN_SOC ? -1 : 1;
+  }
+  return 1;
+}
+
+void stopAllSensors()
+{
+  for (const auto &sensor : sensors)
+  {
+    sensor->stop();
+  }
+
+  Wire.end();
+}
+
+void terminateAndExit(uint8_t sleepMult)
+{
+  stopAllSensors();
+
+  const environrmentData *envData = Environment::getData();
+  drd->stop();
+  Serial.println("Going to sleep now");
+  Serial.flush();
+  Serial.end();
+
+  ESP.deepSleep(envData->updateInterval * uS_TO_S_FACTOR * sleepMult); // Enter sleep mode
+}
+
 void setup() // Setup function - only function that is run in deep sleep mode
 {
   uint8_t sleepMult = 1;
@@ -96,7 +129,10 @@ void setup() // Setup function - only function that is run in deep sleep mode
     ESP.restart();
   }
 
-  std::vector<Sensor *> sensors;
+#ifdef USE_BATTERY_SOC
+  Sensor_BatterySOC battery(BATTERY_SOC_MAX_VOLTAGE, BATTERY_SOC_MIN_VOLTAGE, BATTERY_SOC_ADC_PIN);
+  sensors.push_back(&battery);
+#endif
 
 #ifdef USE_ANALOG_LIGHT_SENSOR
   Sensor_AnalogLightSensor lightSensor(ANALOG_LIGHT_SENSOR_ADC_PIN, ANALOG_LIGHT_SENSOR_POWER_PIN);
@@ -116,11 +152,6 @@ void setup() // Setup function - only function that is run in deep sleep mode
 #ifdef USE_DIGITAL_ANEMOMETER
   Sensor_DigitalAnemometer anemometer(DIGITAL_ANEMOMETER_SIGNAL_PIN, DIGITAL_ANEMOMETER_POWER_PIN);
   sensors.push_back(&anemometer);
-#endif
-
-#ifdef USE_BATTERY_SOC
-  Sensor_BatterySOC battery(BATTERY_SOC_MAX_VOLTAGE, BATTERY_SOC_MIN_VOLTAGE, BATTERY_SOC_ADC_PIN);
-  sensors.push_back(&battery);
 #endif
 
 #ifdef USE_THINGSPEAK
@@ -162,8 +193,11 @@ void setup() // Setup function - only function that is run in deep sleep mode
         switch (rd)
         {
         case RD_BATTERY_SOC:
-          if(cValue < 30){
-            sleepMult = std::floor( (30- cValue) / 3) ;
+          sleepMult = getSleepMult(cValue);
+          if (sleepMult < 0)
+          {
+            Serial.println("Battery SOC is below the min. percentage, SLEEP NOW");
+            terminateAndExit(-sleepMult);
           }
           Serial.print("Battery SOC");
           break;
@@ -198,12 +232,8 @@ void setup() // Setup function - only function that is run in deep sleep mode
     }
     drd->loop();
   }
-  for (const auto &sensor : sensors)
-  {
-    sensor->stop();
-  }
 
-  Wire.end();
+  stopAllSensors();
 
   if (attemptWifiConnection(envData, 30000))
   {
@@ -227,7 +257,8 @@ void setup() // Setup function - only function that is run in deep sleep mode
       Serial.printf("Sync ERROR with HA [%d]", syncHaResult);
       Serial.println();
     }
-    else{
+    else
+    {
       Serial.println("Sync OK with HA ");
     }
     syncHa.stop();
@@ -244,12 +275,7 @@ void setup() // Setup function - only function that is run in deep sleep mode
     Serial.println();
   }
 
-  drd->stop();
-  Serial.println("Going to sleep now");
-  Serial.flush();
-  Serial.end();
-
-  ESP.deepSleep(envData->updateInterval * uS_TO_S_FACTOR * sleepMult); // Enter sleep mode
+  terminateAndExit(sleepMult);
 }
 
 void loop() // Loop function - unused

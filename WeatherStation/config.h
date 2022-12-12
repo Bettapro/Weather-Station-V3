@@ -84,6 +84,10 @@
     #define BATTERY_SOC_MAX_VOLTAGE 4.54
 
     #define BATTERY_SOC_MIN_VOLTAGE 3.3
+
+    #define BATTERY_SOC_MIN_THROTTLE_SOC 30
+
+    #define BATTERY_SOC_MIN_SOC 5
 #endif
 
 //#define USE_THINGSPEAK
