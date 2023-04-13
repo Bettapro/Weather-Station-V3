@@ -79,7 +79,7 @@ public:
         if (ave < 28) // Discard readings faster than 102kph
             ave = 28;
         int index = 0;
-        while (ave < windMap[0][index]) // Search through the windMap array for the corressponding wind value
+        while (ave < windMap[0][index]) // Search through the windMap array for the corresponding wind value
             index++;
         this->wind = windMap[1][index];
     }
