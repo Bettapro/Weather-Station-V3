@@ -92,8 +92,9 @@ void stopAllSensors()
   {
     sensor->stop();
   }
-
+#ifdef ESP32
   Wire.end();
+#endif
 }
 
 void terminateAndExit(uint8_t sleepMult)

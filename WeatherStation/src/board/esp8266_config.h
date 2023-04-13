@@ -48,7 +48,7 @@
 #endif
 
 #if defined USE_BATTERY_SOC and ! defined(BATTERY_SOC_ADC_PIN)
-    #define BATTERY_SOC_ADC_PIN ADC0
+    #define BATTERY_SOC_ADC_PIN A0
 #endif
 
 
