@@ -67,7 +67,21 @@
 #ifdef USE_BME280
   #define BME280_I2C_ADDRESS 0x76
 
+  //#define USE_BME280_TEMPERATURE
+  //#define USE_BME280_HUMIDITY
+  #define USE_BME280_PRESSURE
+
   //#define BME280_POWER_PIN 19
+#endif
+
+#define USE_SHT31
+#ifdef USE_SHT31
+  #define SHT31_I2C_ADDRESS 0x44
+
+  #define USE_SHT31_TEMPERATURE
+  #define USE_SHT31_HUMIDITY
+
+  //#define SHT31_POWER_PIN 19
 #endif
 
 #define USE_DIGITAL_ANEMOMETER

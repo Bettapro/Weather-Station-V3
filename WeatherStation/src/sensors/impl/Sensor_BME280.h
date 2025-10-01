@@ -56,25 +56,43 @@ public:
     };
     void readAll()
     {
+#ifdef USE_BME280_PRESSURE
         SensorAvgRead pressureAvg;
+#endif
+#ifdef USE_BME280_HUMIDITY
         SensorAvgRead humidityAvg;
+#endif
+#ifdef USE_BME280_TEMPERATURE
         SensorAvgRead temperatureAvg;
+#endif
         for (uint8_t sampleCount = 0; sampleCount < SAMPLE_COUNT; sampleCount++)
         {
             if(sampleCount > 0){
                 delay(SAMPLE_TIME);
             }
+#ifdef USE_BME280_TEMPERATURE
             temperatureAvg.accumulate(bme->readTemperature(), [](float v)
                                       { return v >= -40 && v <= 85; });
+#endif
+#ifdef USE_BME280_HUMIDITY
             humidityAvg.accumulate(bme->readHumidity(), [](float v)
                                    { return v >= 0 && v <= 100; });
+#endif
+#ifdef USE_BME280_PRESSURE
             pressureAvg.accumulate(bme->readPressure() / 100.0, [](float v)
                                    { return v >= 300 && v <= 1100; });
+#endif
             
         }
+#ifdef USE_BME280_PRESSURE
         this->pressure = pressureAvg.get(-1);
+#endif
+#ifdef USE_BME280_HUMIDITY
         this->humidity = humidityAvg.get(-1);
+#endif
+#ifdef USE_BME280_TEMPERATURE
         this->temperature = temperatureAvg.get(-999);
+#endif
     }
 
     void stop()
@@ -92,12 +110,18 @@ public:
         {
             switch (what)
             {
+#ifdef USE_BME280_TEMPERATURE
             case RD_TEMPERATURE:
                 return this->temperature;
+#endif
+#ifdef USE_BME280_PRESSURE
             case RD_PRESSURE:
                 return this->pressure;
+#endif
+#ifdef USE_BME280_HUMIDITY
             case RD_HUMIDITY:
                 return this->humidity;
+#endif
             }
         }
         return 0;
@@ -107,12 +131,18 @@ public:
     {
         switch (what)
         {
+#ifdef USE_BME280_TEMPERATURE
         case RD_TEMPERATURE:
             return this->temperature >= -40;
+#endif
+#ifdef USE_BME280_PRESSURE
         case RD_PRESSURE:
             return this->pressure >= 0;
+#endif
+#ifdef USE_BME280_HUMIDITY
         case RD_HUMIDITY:
             return this->humidity >= 0;
+#endif
         }
         return false;
     }
@@ -121,9 +151,15 @@ private:
     Adafruit_BME280 *bme;
     byte address;
     int8_t pin;
+#ifdef USE_BME280_PRESSURE
     float pressure;
+#endif
+#ifdef USE_BME280_HUMIDITY
     float humidity;
+    #endif
+#ifdef USE_BME280_TEMPERATURE
     float temperature;
+#endif
 };
 
 #endif

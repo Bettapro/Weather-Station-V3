@@ -41,6 +41,9 @@
 #ifdef USE_BME280
 #include "../sensors/impl/Sensor_BME280.h"
 #endif
+#ifdef USE_SHT31
+#include "../sensors/impl/Sensor_SHT31.h"
+#endif
 #ifdef USE_DIGITAL_ANEMOMETER
 #include "../sensors/impl/Sensor_DigitalAnemometer.h"
 #endif

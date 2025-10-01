@@ -145,6 +145,11 @@ void setup() // Setup function - only function that is run in deep sleep mode
   sensors.push_back(&bh1750);
 #endif
 
+#ifdef USE_SHT31
+  Sensor_SHT31 sht31(SHT31_I2C_ADDRESS, SHT31_POWER_PIN);
+  sensors.push_back(&sht31);
+#endif
+
 #ifdef USE_BME280
   Sensor_BME280 bme280(BME280_I2C_ADDRESS, BME280_POWER_PIN);
   sensors.push_back(&bme280);

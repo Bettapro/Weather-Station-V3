@@ -39,6 +39,11 @@
     #define BME280_POWER_PIN 19
 #endif
 
+#if defined USE_SHT31 and ! defined(SHT31_POWER_PIN)
+    #define SHT31_POWER_PIN 19
+#endif
+
+
 #if defined USE_DIGITAL_ANEMOMETER and ! defined(DIGITAL_ANEMOMETER_POWER_PIN)
     #define DIGITAL_ANEMOMETER_POWER_PIN 18
 #endif

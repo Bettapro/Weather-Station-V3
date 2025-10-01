@@ -21,8 +21,8 @@ The weather station can provide data of:
 - Wind speed (Km/h)
 
 Boards supported:
-- ESP8266
-- ESP32
+- [ESP8266](docs/ESP8266.md)
+- [ESP32](docs/ESP32.md)
 
 Compatible sensor modules:
 - BME280 (temperature, atmospheric pressure, humidity)
