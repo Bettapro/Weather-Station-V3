@@ -25,6 +25,7 @@ Boards supported:
 - [ESP32](docs/ESP32.md)
 
 Compatible sensor modules:
+- SHT31 (temperature, humidity)
 - BME280 (temperature, atmospheric pressure, humidity)
 - BH1750 (light intensity)
 - Allegro A3213/A3144 Hall Effect Sensor (wind speed)
