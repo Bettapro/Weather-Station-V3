@@ -78,10 +78,12 @@ public:
 
         HASensorNumber tempSensor("temperature", HABaseDeviceType::PrecisionP1);
         tempSensor.setName("Temperature");
+        tempSensor.setDeviceClass("temperature");
         tempSensor.setUnitOfMeasurement("°C");
 
         HASensorNumber windSensor("wind_speed");
         windSensor.setName("Wind speed");
+        windSensor.setUnitOfMeasurement("km/h");
 
         if (!this->mqtt->begin(this->server, this->user, this->password))
         {
