@@ -270,7 +270,7 @@ void setup() // Setup function - only function that is run in deep sleep mode
     syncHa.stop();
 #endif
     // sync completed -> disconnect for wifi
-    delay(1500);
+    delay(1000);
     Serial.println("Wifi disconnected");
     WiFi.disconnect(true, true);
   }

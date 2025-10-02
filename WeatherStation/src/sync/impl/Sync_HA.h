@@ -141,10 +141,10 @@ public:
             syncOk &= windSensor.setValue(*this->windSpeed);
         }
 
-        for (uint8_t index = 0; index < 4; index++)
+        for (uint8_t index = 0; index < 5; index++)
         {
             this->mqtt->loop();
-            delay(250);
+            delay(50);
         }
         return syncOk ? 0 : 10;
     };
@@ -153,6 +153,7 @@ public:
     {
         if (this->mqtt != nullptr)
         {
+            this->mqtt->loop();
             this->mqtt->disconnect();
             delete this->mqtt;
             this->mqtt = nullptr;
@@ -168,6 +169,7 @@ public:
             delete this->client;
             this->client = nullptr;
         }
+
     }
 
 private:
