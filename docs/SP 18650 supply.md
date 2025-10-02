@@ -1,6 +1,6 @@
 # Use Solar Panel and 18650 battery
 A solar panel and a rechargable battery could be use as power supply, this ease the installation as you don't need to connect the weather station to the grid.   
-The weather station doesn't consume much energy (it sleeps most of the time), a 2.5W solar panel is more than enought to power this project.   
+The weather station doesn't consume much energy (it sleeps most of the time), a 2.5W solar panel is more than enough to power this project.   
 One 18650 cell is required to store the energy produced by the solar panel, it acts as reservoir to ensure  to power to the weather station when there's no sun.
 
 ## Bill of materials
