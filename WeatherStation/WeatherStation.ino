@@ -79,9 +79,13 @@ bool attemptWifiConnection(const environrmentData *envData, unsigned long timeou
 
 int8_t getSleepMult(float batterySOC)
 {
+  if (batterySOC < BATTERY_SOC_MIN_SOC)
+  {
+    return -2;
+  }
   if (batterySOC < BATTERY_SOC_MIN_THROTTLE_SOC)
   {
-    return std::floor((BATTERY_SOC_MIN_THROTTLE_SOC - batterySOC) / 3) * batterySOC < BATTERY_SOC_MIN_SOC ? -1 : 1;
+    return BATTERY_SOC_MIN_THROTTLE_SOC - batterySOC < batterySOC - BATTERY_SOC_MIN_SOC ? 2 : 4;
   }
   return 1;
 }
