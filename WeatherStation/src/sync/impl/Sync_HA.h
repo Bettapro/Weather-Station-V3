@@ -143,7 +143,7 @@ public:
             syncOk &= windSensor.setValue(*this->windSpeed);
         }
 
-        for (uint8_t index = 0; index < 5; index++)
+        for (uint8_t index = 0; index < 3; index++)
         {
             this->mqtt->loop();
             delay(50);
