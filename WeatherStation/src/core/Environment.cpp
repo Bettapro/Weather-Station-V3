@@ -88,7 +88,7 @@ void Environment::loadEnvData()
         else
         {
             size_t size = configFile.size();
-            DynamicJsonDocument doc(size * 3);
+            JsonDocument doc;
             DeserializationError error = deserializeJson(doc, configFile);
             if (error)
             {
@@ -97,7 +97,7 @@ void Environment::loadEnvData()
             }
             else
             {
-                if (doc.containsKey(CONFIG_PERSISTENCE_STATION_UPDATE_INTERVAL_S))
+                if (doc[CONFIG_PERSISTENCE_STATION_UPDATE_INTERVAL_S].is<JsonVariant>())
                     envData.updateInterval = doc[CONFIG_PERSISTENCE_STATION_UPDATE_INTERVAL_S];
 
                 loadStringToEnvIfExist(doc, CONFIG_PERSISTENCE_WIFI_SSID, envData.wifiSSID);
@@ -123,7 +123,7 @@ void Environment::loadEnvData()
                 loadStringToEnvIfExist(doc, CONFIG_PERSISTENCE_MQTT_PASSWORD, envData.mqttPassword);
                 loadStringToEnvIfExist(doc, CONFIG_PERSISTENCE_MQTT_USERNAME, envData.mqttUsername);
                 loadStringToEnvIfExist(doc, CONFIG_PERSISTENCE_MQTT_CLIENT_ID, envData.mqttClientId);
-                if (doc.containsKey(CONFIG_PERSISTENCE_MQTT_PORT))
+                if (doc[CONFIG_PERSISTENCE_MQTT_PORT].is<JsonVariant>())
                     envData.mqttServerPort = doc[CONFIG_PERSISTENCE_MQTT_PORT];
 
 #endif
@@ -136,10 +136,9 @@ void Environment::loadEnvData()
     LittleFS.end();
 }
 
-void Environment::loadStringToEnvIfExist(DynamicJsonDocument doc, const char *envKey, char *envValue)
+void Environment::loadStringToEnvIfExist(JsonDocument  doc, const char *envKey, char *envValue)
 {
-    if (doc.containsKey(envKey))
-        strcpy(envValue, doc[envKey]);
+    if (doc[envKey].is<JsonVariant>()) strcpy(envValue, doc[envKey]);
 }
 
 environrmentData *Environment::getData()
