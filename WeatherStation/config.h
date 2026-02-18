@@ -101,7 +101,7 @@
 
     #define BATTERY_SOC_MIN_THROTTLE_SOC 40
 
-    #define BATTERY_SOC_MIN_SOC 20
+    #define BATTERY_SOC_MIN_SOC 17
 #endif
 
 //#define USE_THINGSPEAK

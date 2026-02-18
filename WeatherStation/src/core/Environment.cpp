@@ -61,14 +61,8 @@ void Environment::loadEnvData()
     strcpy(envData.mqttHADeviceName, MQTT_HOME_ASSISTANT_DEVICE_NAME);
 #endif
 #endif
-    if (!LittleFS.begin())
-    {
-        Environment::eraseAllData();
-        if (!LittleFS.begin())
-        {
-            Serial.println("ERROR: cannot access to littlefs partition");
-            return;
-        }
+    if (!LittleFS.begin()) {
+        LittleFS.format();
     }
     // load from file
     if (!LittleFS.exists(CONFIG_PERSISTENCE))
@@ -87,7 +81,6 @@ void Environment::loadEnvData()
         }
         else
         {
-            size_t size = configFile.size();
             JsonDocument doc;
             DeserializationError error = deserializeJson(doc, configFile);
             if (error)
@@ -148,16 +141,11 @@ environrmentData *Environment::getData()
 
 void Environment::resetEnvData()
 {
-    LittleFS.begin();
+    LittleFS.begin(true);
     // load from file
     if (LittleFS.exists(CONFIG_PERSISTENCE))
     {
         LittleFS.remove(CONFIG_PERSISTENCE);
     }
     LittleFS.end();
-}
-
-void Environment::eraseAllData()
-{
-    LittleFS.format();
 }

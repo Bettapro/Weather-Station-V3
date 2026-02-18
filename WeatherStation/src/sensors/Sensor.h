@@ -39,9 +39,7 @@ typedef enum
 
 class Sensor{
 public:
-    
-
-    virtual const char* getName();
+    virtual const char* getName() = 0;
     virtual void start() = 0;
     virtual bool setup() = 0;
     virtual void readAll() = 0;

@@ -66,7 +66,6 @@ class Environment
 public:
     static void loadEnvData();
     static void resetEnvData();
-    static void eraseAllData();
 
     static environrmentData *getData();
 
