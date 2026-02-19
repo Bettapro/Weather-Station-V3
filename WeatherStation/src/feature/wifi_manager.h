@@ -141,7 +141,7 @@ public:
                         return;
                   }
 
-                  DynamicJsonDocument doc(2048);
+                  JsonDocument doc;
 
                   doc[CONFIG_PERSISTENCE_STATION_UPDATE_INTERVAL_S] = strlen(customUpdateInterval.getValue()) > 0 ? atoi(customUpdateInterval.getValue()) : 0;
 

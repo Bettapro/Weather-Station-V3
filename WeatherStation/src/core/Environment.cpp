@@ -141,7 +141,7 @@ environrmentData *Environment::getData()
 
 void Environment::resetEnvData()
 {
-    LittleFS.begin(true);
+    LittleFS.begin();
     // load from file
     if (LittleFS.exists(CONFIG_PERSISTENCE))
     {
