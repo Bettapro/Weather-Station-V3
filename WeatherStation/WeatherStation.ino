@@ -30,42 +30,46 @@
 DoubleResetDetector *drd;
 std::vector<Sensor *> sensors;
 
-bool attemptWifiConnection(const environrmentData *envData, unsigned long timeoutLength = 10000) {
+bool attemptWifiConnection(const environrmentData *envData, unsigned long timeoutLength = 5000) {
+    if (strlen(envData->wifiSSID) <= 0) {
+        return false;
+    }
+    
     IPAddress ip;
     IPAddress gateway;
     IPAddress subnet;
     IPAddress dns1;
     IPAddress dns2;
 
+    WiFi.persistent(false);
+    WiFi.enableSTA(true);
+
     if (strlen(envData->wifiIp)) {
         ip.fromString(envData->wifiIp);
-    }
 
-    if (strlen(envData->wifiGateway)) {
-        gateway.fromString(envData->wifiGateway);
-    }
-    if (strlen(envData->wifiSubnet)) {
-        subnet.fromString(envData->wifiSubnet);
-    }
-    if (strlen(envData->wifiDns1)) {
-        dns1.fromString(envData->wifiDns1);
-    }
-    if (strlen(envData->wifiDns2)) {
-        dns1.fromString(envData->wifiDns2);
+        if (strlen(envData->wifiGateway)) {
+            gateway.fromString(envData->wifiGateway);
+        }
+        if (strlen(envData->wifiSubnet)) {
+            subnet.fromString(envData->wifiSubnet);
+        }
+        if (strlen(envData->wifiDns1)) {
+            dns1.fromString(envData->wifiDns1);
+        }
+        if (strlen(envData->wifiDns2)) {
+            dns2.fromString(envData->wifiDns2);
+        }
+         WiFi.config(ip, gateway, subnet, dns1, dns2);
     }
 
     uint8_t wifiStatus = WL_DISCONNECTED;
-    if (strlen(Environment::getData()->wifiSSID) > 0) {
-        WiFi.persistent(false);
-        WiFi.enableSTA(true);
-        WiFi.config(ip, gateway, subnet, dns1, dns2);
-        WiFi.begin(Environment::getData()->wifiSSID, Environment::getData()->wifiPassword);
-        wifiStatus = WiFi.waitForConnectResult(timeoutLength);
-        if (wifiStatus == WL_DISCONNECTED) {
-            WiFi.reconnect();
-            wifiStatus = WiFi.waitForConnectResult(timeoutLength);
-        }
-    }
+       
+    WiFi.begin(Environment::getData()->wifiSSID, Environment::getData()->wifiPassword);
+    wifiStatus = WiFi.waitForConnectResult(timeoutLength);
+    // if (wifiStatus == WL_DISCONNECTED) {
+    //    WiFi.reconnect();
+    //    wifiStatus = WiFi.waitForConnectResult(timeoutLength);
+    //}
 
     return wifiStatus == WL_CONNECTED;
 }
@@ -109,6 +113,9 @@ void setup()  // Setup function - only function that is run in deep sleep mode
     WiFi.mode(WIFI_OFF);
 #ifdef ESP8266
     WiFi.forceSleepBegin();
+#endif
+#ifdef ESP32
+    btStop();
 #endif
     delay(1);
 
@@ -186,7 +193,7 @@ void setup()  // Setup function - only function that is run in deep sleep mode
         Serial.println(sensor->getName());
 
         sensor->readAll();
-        for (uint8_t rdi = 0; rdi <= RD_COUNT; rdi++) {
+        for (uint8_t rdi = 0; rdi < RD_COUNT; rdi++) {
             ReadingType rd = (ReadingType)rdi;
             if (sensor->isOk() && sensor->has(rd)) {
                 cValue = sensor->get(rd);
@@ -240,7 +247,7 @@ void setup()  // Setup function - only function that is run in deep sleep mode
         syncTS.setup();
         uint8_t syncTSResult = syncTS.flush();
         if (syncTSResult != 0) {
-            Serial.printf("Sync ERROR with ThingSpeak [%d]", syncHaResult);
+            Serial.printf("Sync ERROR with ThingSpeak [%d]", syncTSResult);
             Serial.println();
         }
         syncTS.stop();
