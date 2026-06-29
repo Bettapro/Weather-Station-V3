@@ -112,7 +112,7 @@ void setup()  // Setup function - only function that is run in deep sleep mode
 #endif
     delay(1);
 
-    uint8_t sleepMult = 1;
+    int8_t sleepMult = 1;
     Serial.begin(SERIAL_DEBUG_BAUDRATE);
     Environment::loadEnvData();
     const environrmentData *envData = Environment::getData();
