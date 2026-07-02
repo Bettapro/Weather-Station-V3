@@ -26,8 +26,8 @@
 
 #define PROJECT_NAME "Weather-Station-V3"
 #define PROJECT_AUTHOR "Bettapro"
-#define PROJECT_VERSION "v3.1.0"
-#define PROJECT_SUBVERSION 0
+#define PROJECT_VERSION "v3.2.0"
+#define PROJECT_SUBVERSION 1
 
 
 #include <Arduino.h>

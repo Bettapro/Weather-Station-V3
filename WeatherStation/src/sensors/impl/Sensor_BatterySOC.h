@@ -54,16 +54,25 @@ public:
     };
     void readAll()
     {
-        SensorAvgRead voltageAvg;
+       SensorAvgRead voltageAvg;
         for (uint8_t sampleCount = 0; sampleCount < BATT_SAMPLE_COUNT; sampleCount++)
         {
             if(sampleCount > 0){
                 delay(BATT_SAMPLE_TIME);
             }
+
             float value = analogRead(this->pinVoltage) * vMax / 4095.0;
             voltageAvg.accumulate(value);
         }
-        this->soc = (voltageAvg.get(vMin) - vMin) / (vMax - vMin) * 100;
+
+        float vReal = voltageAvg.get(vMin);
+        
+        const float vMaxBattery = 4.20f; 
+
+        if (vReal > vMaxBattery) vReal = vMaxBattery;
+        if (vReal < vMin) vReal = vMin;
+
+        this->soc = (vReal - vMin) / (vMaxBattery - vMin) * 100;
     }
 
     void stop()

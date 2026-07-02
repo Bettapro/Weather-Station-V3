@@ -25,6 +25,9 @@
 #include "../../incl/include_all_lib.h"
 #include "../Sync.h"
 #include <ArduinoHA.h>
+#include <math.h> // roundf()
+
+#define MAX_HA_SENSORS 7
 
 class Sync_HA : public Sync
 {
@@ -40,51 +43,69 @@ public:
         this->client = nullptr;
         this->device = nullptr;
         this->mqtt = nullptr;
-    };
+
+        this->pressureSensor = nullptr;
+        this->lightSensor = nullptr;
+        this->humidSensor = nullptr;
+        this->batterySensor = nullptr;
+        this->tempSensor = nullptr;
+        this->windSensor = nullptr;
+    }
+
+    ~Sync_HA()
+    {
+        stop(); 
+        free(this->user);
+        free(this->password);
+        free(this->deviceId);
+        free(this->deviceName);
+    }
 
     void setup()
     {
         this->client = new WiFiClient();
         this->device = new HADevice(this->deviceId);
-        this->mqtt = new HAMqtt(*this->client, *this->device, 7);
+        this->mqtt = new HAMqtt(*this->client, *this->device, MAX_HA_SENSORS);
+        
         // set device's details (optional)
         this->device->setName(this->deviceName);
         this->device->setSoftwareVersion(PROJECT_VERSION);
         this->device->setModel(PROJECT_NAME);
         this->device->setManufacturer(PROJECT_AUTHOR);
-    };
+
+
+        this->pressureSensor = new HASensorNumber("pressure");
+        this->pressureSensor->setDeviceClass("pressure");
+        this->pressureSensor->setName("Atmospheric pressure"); // Corretto il refuso
+        this->pressureSensor->setUnitOfMeasurement("hPa");
+
+        this->lightSensor = new HASensorNumber("light", HABaseDeviceType::PrecisionP0);
+        this->lightSensor->setName("Light intensity");
+        this->lightSensor->setUnitOfMeasurement("lx");
+        this->lightSensor->setDeviceClass("illuminance");
+
+        this->humidSensor = new HASensorNumber("humidity", HABaseDeviceType::PrecisionP1);
+        this->humidSensor->setName("Humidity");
+        this->humidSensor->setDeviceClass("humidity");
+        this->humidSensor->setUnitOfMeasurement("%");
+
+        this->batterySensor = new HASensorNumber("battery", HABaseDeviceType::PrecisionP0);
+        this->batterySensor->setName("Battery SOC");
+        this->batterySensor->setDeviceClass("battery");
+        this->batterySensor->setUnitOfMeasurement("%");
+
+        this->tempSensor = new HASensorNumber("temperature", HABaseDeviceType::PrecisionP1);
+        this->tempSensor->setName("Temperature");
+        this->tempSensor->setDeviceClass("temperature");
+        this->tempSensor->setUnitOfMeasurement("°C");
+
+        this->windSensor = new HASensorNumber("wind_speed", HABaseDeviceType::PrecisionP0);
+        this->windSensor->setName("Wind speed");
+        this->windSensor->setUnitOfMeasurement("km/h");
+    }
 
     uint8_t flush()
     {
-        HASensorNumber pressureSensor("pressure");
-        pressureSensor.setDeviceClass("pressure");
-        pressureSensor.setName("Atmoferic pressure");
-        pressureSensor.setUnitOfMeasurement("hPa");
-
-        HASensorNumber lightSensor("light");
-        lightSensor.setName("Light intensity");
-        lightSensor.setUnitOfMeasurement("lx");
-        lightSensor.setDeviceClass("illuminance");
-
-        HASensorNumber humidSensor("humidity", HABaseDeviceType::PrecisionP1);
-        humidSensor.setName("Humidity");
-        humidSensor.setDeviceClass("humidity");
-        humidSensor.setUnitOfMeasurement("%");
-
-        HASensorNumber batterySensor("battery");
-        batterySensor.setName("Battery SOC");
-        batterySensor.setDeviceClass("battery");
-        batterySensor.setUnitOfMeasurement("%");
-
-        HASensorNumber tempSensor("temperature", HABaseDeviceType::PrecisionP1);
-        tempSensor.setName("Temperature");
-        tempSensor.setDeviceClass("temperature");
-        tempSensor.setUnitOfMeasurement("°C");
-
-        HASensorNumber windSensor("wind_speed");
-        windSensor.setName("Wind speed");
-        windSensor.setUnitOfMeasurement("km/h");
-
         if (!this->mqtt->begin(this->server, this->user, this->password))
         {
             return 1;
@@ -107,40 +128,41 @@ public:
 
         bool syncOk = true;
 
-        pressureSensor.setAvailability(this->pressure != nullptr);
+        this->pressureSensor->setAvailability(this->pressure != nullptr);
         if (syncOk && this->pressure != nullptr)
         {
-            syncOk &= pressureSensor.setValue(*this->pressure);
+            syncOk &= this->pressureSensor->setValue(*this->pressure);
         }
 
-        lightSensor.setAvailability(this->light != nullptr);
+        this->lightSensor->setAvailability(this->light != nullptr);
         if (syncOk && this->light != nullptr)
         {
-            syncOk &= lightSensor.setValue(*this->light);
+            syncOk &= this->lightSensor->setValue(*this->light);
         }
 
-        humidSensor.setAvailability(this->humidity != nullptr);
+        this->humidSensor->setAvailability(this->humidity != nullptr);
         if (syncOk && this->humidity != nullptr)
         {
-            syncOk &= humidSensor.setValue(*this->humidity * RAW_MEASURE_PRECISION / RAW_MEASURE_PRECISION);
+            // Logica di arrotondamento corretta (es. 12.345 * 10 -> 123.45 -> round(123) -> 123.0 / 10 -> 12.3)
+            syncOk &= this->humidSensor->setValue(roundf(*this->humidity * RAW_MEASURE_PRECISION) / RAW_MEASURE_PRECISION);
         }
 
-        batterySensor.setAvailability(this->batterySoc != nullptr);
+        this->batterySensor->setAvailability(this->batterySoc != nullptr);
         if (syncOk && this->batterySoc != nullptr)
         {
-            syncOk &= batterySensor.setValue(*this->batterySoc * RAW_MEASURE_PRECISION / RAW_MEASURE_PRECISION);
+            syncOk &= this->batterySensor->setValue(roundf(*this->batterySoc * RAW_MEASURE_PRECISION) / RAW_MEASURE_PRECISION);
         }
 
-        tempSensor.setAvailability(this->temperature != nullptr);
+        this->tempSensor->setAvailability(this->temperature != nullptr);
         if (syncOk && this->temperature != nullptr)
         {
-            syncOk &= tempSensor.setValue(*this->temperature * RAW_MEASURE_PRECISION / RAW_MEASURE_PRECISION);
+            syncOk &= this->tempSensor->setValue(roundf(*this->temperature * RAW_MEASURE_PRECISION) / RAW_MEASURE_PRECISION);
         }
 
-        windSensor.setAvailability(this->windSpeed != nullptr);
+        this->windSensor->setAvailability(this->windSpeed != nullptr);
         if (syncOk && this->windSpeed != nullptr)
         {
-            syncOk &= windSensor.setValue(*this->windSpeed);
+            syncOk &= this->windSensor->setValue(*this->windSpeed);
         }
 
         for (uint8_t index = 0; index < 3; index++)
@@ -149,10 +171,19 @@ public:
             delay(50);
         }
         return syncOk ? 0 : 10;
-    };
+    }
 
     void stop()
     {
+        // Deallocazione dei sensori
+        if (this->pressureSensor != nullptr) { delete this->pressureSensor; this->pressureSensor = nullptr; }
+        if (this->lightSensor != nullptr) { delete this->lightSensor; this->lightSensor = nullptr; }
+        if (this->humidSensor != nullptr) { delete this->humidSensor; this->humidSensor = nullptr; }
+        if (this->batterySensor != nullptr) { delete this->batterySensor; this->batterySensor = nullptr; }
+        if (this->tempSensor != nullptr) { delete this->tempSensor; this->tempSensor = nullptr; }
+        if (this->windSensor != nullptr) { delete this->windSensor; this->windSensor = nullptr; }
+
+        // Deallocazione delle connessioni
         if (this->mqtt != nullptr)
         {
             this->mqtt->loop();
@@ -171,7 +202,6 @@ public:
             delete this->client;
             this->client = nullptr;
         }
-
     }
 
 private:
@@ -180,10 +210,17 @@ private:
     char *password;
     char *deviceId;
     char *deviceName;
-    //
+    
     WiFiClient *client;
     HADevice *device;
     HAMqtt *mqtt;
+
+    HASensorNumber *pressureSensor;
+    HASensorNumber *lightSensor;
+    HASensorNumber *humidSensor;
+    HASensorNumber *batterySensor;
+    HASensorNumber *tempSensor;
+    HASensorNumber *windSensor;
 };
 
 #endif

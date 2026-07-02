@@ -78,7 +78,7 @@ int8_t getSleepMult(float batterySOC)
 {
   if (batterySOC < BATTERY_SOC_MIN_SOC)
   {
-    return -2;
+    return -6;
   }
   if (batterySOC < BATTERY_SOC_MIN_THROTTLE_SOC)
   {
