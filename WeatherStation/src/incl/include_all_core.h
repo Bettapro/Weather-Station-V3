@@ -26,9 +26,8 @@
 
 #define PROJECT_NAME "Weather-Station-V3"
 #define PROJECT_AUTHOR "Bettapro"
-#define PROJECT_VERSION "v3.2.0"
+#define PROJECT_VERSION "v3.3.0"
 #define PROJECT_SUBVERSION 1
-
 
 #include <Arduino.h>
 
@@ -36,7 +35,6 @@
  *  Main defs
  */
 #include "config_persistence.h"
-
 
 /**
  * Include user + board + solar tracer configs
@@ -54,11 +52,10 @@
 #error Your board is not supported.
 #endif
 
-
 /**
  * Include only not-external-dependant headers
  */
-#include "../core/Util.h"
 #include "../core/Text.h"
+#include "../core/Util.h"
 
 #endif

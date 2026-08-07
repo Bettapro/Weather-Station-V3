@@ -22,205 +22,171 @@
 #ifndef SYNC_HA_H
 #define SYNC_HA_H
 
+#include <WiFiClient.h>
+
 #include "../../incl/include_all_lib.h"
 #include "../Sync.h"
-#include <ArduinoHA.h>
-#include <math.h> // roundf()
+#include "HomeAssistantArduinoMQTT.h"
 
-#define MAX_HA_SENSORS 7
+class Sync_HA : public Sync {
+    public:
+        Sync_HA(const char* server, const char* user, const char* password, const char* deviceId, const char* deviceName) {
+            this->server = strdup(server);
+            this->user = strdup(user);
+            this->password = strdup(password);
+            this->deviceId = strdup(deviceId);
+            this->deviceName = strdup(deviceName);
 
-class Sync_HA : public Sync
-{
-public:
-    Sync_HA(const char *server, const char *user, const char *password, const char *deviceId, const char *deviceName)
-    {
-        this->server = strdup(server);
-        this->user = strdup(user);
-        this->password = strdup(password);
-        this->deviceId = strdup(deviceId);
-        this->deviceName = strdup(deviceName);
-
-        this->client = nullptr;
-        this->device = nullptr;
-        this->mqtt = nullptr;
-
-        this->pressureSensor = nullptr;
-        this->lightSensor = nullptr;
-        this->humidSensor = nullptr;
-        this->batterySensor = nullptr;
-        this->tempSensor = nullptr;
-        this->windSensor = nullptr;
-    }
-
-    ~Sync_HA()
-    {
-        stop(); 
-        free(this->user);
-        free(this->password);
-        free(this->deviceId);
-        free(this->deviceName);
-    }
-
-    void setup()
-    {
-        this->client = new WiFiClient();
-        this->device = new HADevice(this->deviceId);
-        this->mqtt = new HAMqtt(*this->client, *this->device, MAX_HA_SENSORS);
-        
-        // set device's details (optional)
-        this->device->setName(this->deviceName);
-        this->device->setSoftwareVersion(PROJECT_VERSION);
-        this->device->setModel(PROJECT_NAME);
-        this->device->setManufacturer(PROJECT_AUTHOR);
-
-
-        this->pressureSensor = new HASensorNumber("pressure");
-        this->pressureSensor->setDeviceClass("pressure");
-        this->pressureSensor->setName("Atmospheric pressure"); // Corretto il refuso
-        this->pressureSensor->setUnitOfMeasurement("hPa");
-
-        this->lightSensor = new HASensorNumber("light", HABaseDeviceType::PrecisionP0);
-        this->lightSensor->setName("Light intensity");
-        this->lightSensor->setUnitOfMeasurement("lx");
-        this->lightSensor->setDeviceClass("illuminance");
-
-        this->humidSensor = new HASensorNumber("humidity", HABaseDeviceType::PrecisionP1);
-        this->humidSensor->setName("Humidity");
-        this->humidSensor->setDeviceClass("humidity");
-        this->humidSensor->setUnitOfMeasurement("%");
-
-        this->batterySensor = new HASensorNumber("battery", HABaseDeviceType::PrecisionP0);
-        this->batterySensor->setName("Battery SOC");
-        this->batterySensor->setDeviceClass("battery");
-        this->batterySensor->setUnitOfMeasurement("%");
-
-        this->tempSensor = new HASensorNumber("temperature", HABaseDeviceType::PrecisionP1);
-        this->tempSensor->setName("Temperature");
-        this->tempSensor->setDeviceClass("temperature");
-        this->tempSensor->setUnitOfMeasurement("°C");
-
-        this->windSensor = new HASensorNumber("wind_speed", HABaseDeviceType::PrecisionP0);
-        this->windSensor->setName("Wind speed");
-        this->windSensor->setUnitOfMeasurement("km/h");
-    }
-
-    uint8_t flush()
-    {
-        if (!this->mqtt->begin(this->server, this->user, this->password))
-        {
-            return 1;
+            this->ha = nullptr;
         }
 
-        this->mqtt->loop();
+        ~Sync_HA() {
+            stop();
+            free(this->server);
+            free(this->user);
+            free(this->password);
+            free(this->deviceId);
+            free(this->deviceName);
+        }
 
-        int attemptCount = 0;
-        while (!this->mqtt->isConnected())
-        {
-            if (attemptCount > 10)
-            {
-                return 2;
+        void setup(bool isDeepSleepWakeup) {
+            this->ha = new HomeAssistantArduinoMQTT(7);
+
+            this->ha->MqttUser = this->user;
+            this->ha->MqttPassword = this->password;
+            this->ha->Manufacturer = PROJECT_AUTHOR;
+            this->ha->Model = PROJECT_NAME;
+            this->ha->Version = PROJECT_VERSION;
+            this->ha->HADeviceName = this->deviceName;
+            this->ha->MQTTDeviceName = this->deviceId;
+            this->ha->useSharedAvailability = false;
+
+            this->ha->commandEnabled = false;
+
+            this->ha->enableConfigPublishing = !isDeepSleepWakeup;
+
+            this->ha->begin(this->client, this->server, 1883);
+        }
+
+        uint8_t flush() {
+            if (this->ha == nullptr) return 1;
+
+            this->ha->loop();
+
+            int attemptCount = 0;
+            while (!this->ha->connected()) {
+                if (attemptCount > 50) {
+                    return 2;
+                }
+                delay(100);
+                this->ha->loop();
+                attemptCount++;
             }
-            delay(100);
-            this->mqtt->loop();
-            attemptCount++;
+
+            HAEntityBuilder pBuilder = this->ha->newSensorEntity("pressure", "Atmospheric pressure");
+            pBuilder.deviceClass("pressure");
+            pBuilder.unit("hPa");
+            pBuilder.suggestedDisplayPrecision(0);
+            pBuilder.publish();
+
+            HAEntityBuilder lBuilder = this->ha->newSensorEntity("light", "Light intensity");
+            lBuilder.deviceClass("illuminance");
+            lBuilder.unit("lx");
+            lBuilder.suggestedDisplayPrecision(0);
+            lBuilder.publish();
+
+            HAEntityBuilder hBuilder = this->ha->newSensorEntity("humidity", "Humidity");
+            hBuilder.deviceClass("humidity");
+            hBuilder.unit("%");
+            hBuilder.suggestedDisplayPrecision(1);
+            hBuilder.publish();
+
+            HAEntityBuilder bBuilder = this->ha->newSensorEntity("battery", "Battery SOC");
+            bBuilder.deviceClass("battery");
+            bBuilder.unit("%");
+            bBuilder.suggestedDisplayPrecision(0);
+            bBuilder.publish();
+
+            HAEntityBuilder tBuilder = this->ha->newSensorEntity("temperature", "Temperature");
+            tBuilder.deviceClass("temperature");
+            tBuilder.unit("°C");
+            tBuilder.suggestedDisplayPrecision(1);
+            tBuilder.publish();
+
+            HAEntityBuilder wBuilder = this->ha->newSensorEntity("wind_speed", "Wind speed");
+            wBuilder.unit("km/h");
+            wBuilder.suggestedDisplayPrecision(0);
+            wBuilder.publish();
+
+            /*
+                        this->client.flush();
+                        this->client.setNoDelay(true);
+            */
+
+            char valBuf[16];
+
+            this->ha->setEntityAvailability("pressure", this->pressure != nullptr);
+            if (this->pressure != nullptr) {
+                HAAM_FORMAT_FLOAT(valBuf, *this->pressure, 0);
+                this->ha->setValue("pressure", valBuf);
+            }
+
+            this->ha->setEntityAvailability("light", this->light != nullptr);
+            if (this->light != nullptr) {
+                HAAM_FORMAT_FLOAT(valBuf, *this->light, 1);
+                this->ha->setValue("light", valBuf);
+            }
+
+            this->ha->setEntityAvailability("humidity", this->humidity != nullptr);
+            if (this->humidity != nullptr) {
+                HAAM_FORMAT_FLOAT(valBuf, *this->humidity, 1);
+                this->ha->setValue("humidity", valBuf);
+            }
+
+            this->ha->setEntityAvailability("battery", this->batterySoc != nullptr);
+            if (this->batterySoc != nullptr) {
+                HAAM_FORMAT_FLOAT(valBuf, *this->batterySoc, 0);
+                this->ha->setValue("battery", valBuf);
+            }
+
+            this->ha->setEntityAvailability("temperature", this->temperature != nullptr);
+            if (this->temperature != nullptr) {
+                HAAM_FORMAT_FLOAT(valBuf, *this->temperature, 2);
+                this->ha->setValue("temperature", valBuf);
+            }
+
+            this->ha->setEntityAvailability("wind_speed", this->windSpeed != nullptr);
+            if (this->windSpeed != nullptr) {
+                HAAM_FORMAT_FLOAT(valBuf, *this->windSpeed, 0);
+                this->ha->setValue("wind_speed", valBuf);
+            }
+
+            this->ha->sendValues();
+
+            for (uint8_t index = 0; index < 3; index++) {
+                this->ha->loop();
+                delay(50);
+            }
+            return 0;
         }
-        this->client->setNoDelay(true);
 
-        bool syncOk = true;
-
-        this->pressureSensor->setAvailability(this->pressure != nullptr);
-        if (syncOk && this->pressure != nullptr)
-        {
-            syncOk &= this->pressureSensor->setValue(*this->pressure);
+        void stop() {
+            if (this->ha != nullptr) {
+                delete this->ha;
+                this->ha = nullptr;
+            }
+            this->client.stop();
         }
 
-        this->lightSensor->setAvailability(this->light != nullptr);
-        if (syncOk && this->light != nullptr)
-        {
-            syncOk &= this->lightSensor->setValue(*this->light);
-        }
+    private:
+        char* server;
+        char* user;
+        char* password;
+        char* deviceId;
+        char* deviceName;
 
-        this->humidSensor->setAvailability(this->humidity != nullptr);
-        if (syncOk && this->humidity != nullptr)
-        {
-            // Logica di arrotondamento corretta (es. 12.345 * 10 -> 123.45 -> round(123) -> 123.0 / 10 -> 12.3)
-            syncOk &= this->humidSensor->setValue(roundf(*this->humidity * RAW_MEASURE_PRECISION) / RAW_MEASURE_PRECISION);
-        }
-
-        this->batterySensor->setAvailability(this->batterySoc != nullptr);
-        if (syncOk && this->batterySoc != nullptr)
-        {
-            syncOk &= this->batterySensor->setValue(roundf(*this->batterySoc * RAW_MEASURE_PRECISION) / RAW_MEASURE_PRECISION);
-        }
-
-        this->tempSensor->setAvailability(this->temperature != nullptr);
-        if (syncOk && this->temperature != nullptr)
-        {
-            syncOk &= this->tempSensor->setValue(roundf(*this->temperature * RAW_MEASURE_PRECISION) / RAW_MEASURE_PRECISION);
-        }
-
-        this->windSensor->setAvailability(this->windSpeed != nullptr);
-        if (syncOk && this->windSpeed != nullptr)
-        {
-            syncOk &= this->windSensor->setValue(*this->windSpeed);
-        }
-
-        for (uint8_t index = 0; index < 3; index++)
-        {
-            this->mqtt->loop();
-            delay(50);
-        }
-        return syncOk ? 0 : 10;
-    }
-
-    void stop()
-    {
-        // Deallocazione dei sensori
-        if (this->pressureSensor != nullptr) { delete this->pressureSensor; this->pressureSensor = nullptr; }
-        if (this->lightSensor != nullptr) { delete this->lightSensor; this->lightSensor = nullptr; }
-        if (this->humidSensor != nullptr) { delete this->humidSensor; this->humidSensor = nullptr; }
-        if (this->batterySensor != nullptr) { delete this->batterySensor; this->batterySensor = nullptr; }
-        if (this->tempSensor != nullptr) { delete this->tempSensor; this->tempSensor = nullptr; }
-        if (this->windSensor != nullptr) { delete this->windSensor; this->windSensor = nullptr; }
-
-        // Deallocazione delle connessioni
-        if (this->mqtt != nullptr)
-        {
-            this->mqtt->loop();
-            this->mqtt->disconnect();
-            delete this->mqtt;
-            this->mqtt = nullptr;
-        }
-        if (this->device != nullptr)
-        {
-            delete this->device;
-            this->device = nullptr;
-        }
-        if (this->client != nullptr)
-        {
-            this->client->flush();
-            delete this->client;
-            this->client = nullptr;
-        }
-    }
-
-private:
-    char *server;
-    char *user;
-    char *password;
-    char *deviceId;
-    char *deviceName;
-    
-    WiFiClient *client;
-    HADevice *device;
-    HAMqtt *mqtt;
-
-    HASensorNumber *pressureSensor;
-    HASensorNumber *lightSensor;
-    HASensorNumber *humidSensor;
-    HASensorNumber *batterySensor;
-    HASensorNumber *tempSensor;
-    HASensorNumber *windSensor;
+        WiFiClient client;
+        HomeAssistantArduinoMQTT* ha;
 };
 
 #endif

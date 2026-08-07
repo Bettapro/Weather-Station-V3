@@ -27,14 +27,14 @@
 
 #define uS_TO_S_FACTOR 1000000ULL  // Conversion factor for micro seconds to seconds
 
-DoubleResetDetector *drd;
-std::vector<Sensor *> sensors;
+DoubleResetDetector* drd;
+std::vector<Sensor*> sensors;
 
-bool attemptWifiConnection(const environrmentData *envData, unsigned long timeoutLength = 5000) {
+bool attemptWifiConnection(const environrmentData* envData, unsigned long timeoutLength = 5000) {
     if (strlen(envData->wifiSSID) <= 0) {
         return false;
     }
-    
+
     IPAddress ip;
     IPAddress gateway;
     IPAddress subnet;
@@ -59,11 +59,11 @@ bool attemptWifiConnection(const environrmentData *envData, unsigned long timeou
         if (strlen(envData->wifiDns2)) {
             dns2.fromString(envData->wifiDns2);
         }
-         WiFi.config(ip, gateway, subnet, dns1, dns2);
+        WiFi.config(ip, gateway, subnet, dns1, dns2);
     }
 
     uint8_t wifiStatus = WL_DISCONNECTED;
-       
+
     WiFi.begin(Environment::getData()->wifiSSID, Environment::getData()->wifiPassword);
     wifiStatus = WiFi.waitForConnectResult(timeoutLength);
     // if (wifiStatus == WL_DISCONNECTED) {
@@ -74,21 +74,20 @@ bool attemptWifiConnection(const environrmentData *envData, unsigned long timeou
     return wifiStatus == WL_CONNECTED;
 }
 
-int8_t getSleepMult(float batterySOC)
-{
-  if (batterySOC < BATTERY_SOC_MIN_SOC)
-  {
-    return -6;
-  }
-  if (batterySOC < BATTERY_SOC_MIN_THROTTLE_SOC)
-  {
-    return BATTERY_SOC_MIN_THROTTLE_SOC - batterySOC < batterySOC - BATTERY_SOC_MIN_SOC ? 2 : 4;
-  }
-  return 1;
+int8_t getSleepMult(float batterySOC) {
+#ifdef USE_BATTERY_SOC
+    if (batterySOC < BATTERY_SOC_MIN_SOC) {
+        return -6;
+    }
+    if (batterySOC < BATTERY_SOC_MIN_THROTTLE_SOC) {
+        return BATTERY_SOC_MIN_THROTTLE_SOC - batterySOC < batterySOC - BATTERY_SOC_MIN_SOC ? 2 : 4;
+    }
+#endif
+    return 1;
 }
 
 void stopAllSensors() {
-    for (const auto &sensor : sensors) {
+    for (const auto& sensor : sensors) {
         sensor->stop();
     }
 #ifdef ESP32
@@ -99,7 +98,7 @@ void stopAllSensors() {
 void terminateAndExit(uint8_t sleepMult) {
     stopAllSensors();
 
-    const environrmentData *envData = Environment::getData();
+    const environrmentData* envData = Environment::getData();
     drd->stop();
     Serial.println("Going to sleep now");
     Serial.flush();
@@ -119,14 +118,25 @@ void setup()  // Setup function - only function that is run in deep sleep mode
 #endif
     delay(1);
 
+    bool isDeepSleepWakeup = false;
+#ifdef ESP8266
+    if (ESP.getResetInfoPtr()->reason == REASON_DEEP_SLEEP_AWAKE) {
+        isDeepSleepWakeup = true;
+    }
+#elif defined(ESP32)
+    if (esp_reset_reason() == ESP_RST_DEEPSLEEP) {
+        isDeepSleepWakeup = true;
+    }
+#endif
+
     int8_t sleepMult = 1;
     Serial.begin(SERIAL_DEBUG_BAUDRATE);
     Environment::loadEnvData();
-    const environrmentData *envData = Environment::getData();
+    const environrmentData* envData = Environment::getData();
 
     drd = new DoubleResetDetector(2, 0);
 
-    if (drd->detectDoubleReset()) {
+    if (drd->detectDoubleReset() && !isDeepSleepWakeup) {
         drd->stop();
         Serial.println("Double Reset Detected");
 
@@ -173,14 +183,15 @@ void setup()  // Setup function - only function that is run in deep sleep mode
     Sync_HA syncHa(envData->mqttServerHostname, envData->mqttUsername, envData->mqttPassword, envData->mqttClientId, envData->mqttHADeviceName);
 #endif
 
-    for (const auto &sensor : sensors) {
+    for (const auto& sensor : sensors) {
         sensor->start();
     }
+
     // giving some extra time to all sensors to start a setup
     delay(500);
     drd->loop();
     Wire.begin();
-    for (const auto &sensor : sensors) {
+    for (const auto& sensor : sensors) {
         if (!sensor->setup()) {
             Serial.print("Error while setting up ");
             Serial.println(sensor->getName());
@@ -188,7 +199,7 @@ void setup()  // Setup function - only function that is run in deep sleep mode
     }
 
     float cValue;
-    for (const auto &sensor : sensors) {
+    for (const auto& sensor : sensors) {
         Serial.print("Reading from ");
         Serial.println(sensor->getName());
 
@@ -253,7 +264,7 @@ void setup()  // Setup function - only function that is run in deep sleep mode
         syncTS.stop();
 #endif
 #ifdef USE_MQTT_HOME_ASSISTANT
-        syncHa.setup();
+        syncHa.setup(isDeepSleepWakeup);
         uint8_t syncHaResult = syncHa.flush();
         if (syncHaResult != 0) {
             Serial.printf("Sync ERROR with HA [%d]", syncHaResult);
